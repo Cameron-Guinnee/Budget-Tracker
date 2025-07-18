@@ -20,3 +20,7 @@ def process_data(df: pd.DataFrame, get_savings_df: Callable[[int], pd.DataFrame]
         savings = income_total - expenses_total
         df = pd.concat([df, get_savings_df(savings)], axis=0)
     return df.copy()
+
+def breakdown_tab(df: pd.DataFrame) -> None:
+    owners = df['Owner'].unique()
+    # TO BE CONTINUED
