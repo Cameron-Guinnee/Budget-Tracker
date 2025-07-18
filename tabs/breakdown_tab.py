@@ -23,4 +23,46 @@ def process_data(df: pd.DataFrame, get_savings_df: Callable[[int], pd.DataFrame]
 
 def breakdown_tab(df: pd.DataFrame) -> None:
     owners = df['Owner'].unique()
-    # TO BE CONTINUED
+    if len(owners) > 1:
+        combined_breakdown = st.checkbox('Show combined breakdown', value=False)
+    savings_toggle = st.checkbox('Hide Savings', value=False)
+    if len(owners) == 1 or combined_breakdown:
+        c_grouped_data = df.groupby([
+            df['Category'],
+        ], as_index=False).sum(numeric_only=True)
+        data = process_data(c_grouped_data,
+                            lambda s: pd.DataFrame({
+                                'Category': ['Savings'],
+                                'Price': [s],
+                            }),
+                            savings_toggle)
+        histogram: go.Figure = px.histogram(data, x="Category", y="Price", color="Category",
+                                            text_auto='.2s', color_discrete_map=category_color_map)
+    else:
+        c_o_grouped_data = df.groupby([
+            df['Owner'],
+            df['Category'],
+        ], as_index=False).sum(numeric_only=True)
+        o_grouped_data = df.groupby([
+            df['Owner'],
+        ], as_index=False).sum(numeric_only=True)
+        data = pd.DataFrame()
+        for _, row in o_grouped_data.iterrows():
+            data = pd.concat([data, 
+                              process_data(c_o_grouped_data.loc[c_o_grouped_data['Owner'] == row['Owner']],
+                                           lambda s: pd.DataFrame({
+                                               'Owner': [row['Owner']],
+                                               'Category': ['Savings'],
+                                               'Price': [s],
+                                               }),
+                                               savings_toggle)
+                            ], axis=0)
+
+        histogram: go.Figure = px.histogram(data, x="Category", y="Price", color="Owner", barmode="group",
+                                            text_auto='.2s', color_discrete_map=get_owner_color_map())
+    histogram.update_yaxes(title='')
+    histogram.update_xaxes(title='')
+    histogram.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False,
+                            hovertemplate="%{x} <br> %{y:$,.2f}")
+    histogram.update_layout(bargroupgap=0.15, xaxis={'categoryorder':'total descending'})
+    st.plotly_chart(histogram, use_container_width=True)
