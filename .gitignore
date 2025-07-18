@@ -1,0 +1,4 @@
+**/__pycache__/*
+
+.streamlit/*.toml
+.streamlit/*.json
