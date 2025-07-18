@@ -1,5 +1,5 @@
 gspread==5.12.3
-pandas==1.6.3
+pandas==1.5.3
 plotly==5.18.0
 st-gsheets-connection==0.6.1
 streamlit==1.29.0
