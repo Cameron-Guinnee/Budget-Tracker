@@ -22,7 +22,8 @@ if st.button("🔄 Refresh Data"):
     st.rerun()
 
 # Create a connection object.
-conn: GSheetsConnection = st.connection("gsheets", type=GSheetsConnection)
+#conn: GSheetsConnection = st.connection("gsheets", type=GSheetsConnection)
+conn = st.connection("gsheets", type=GSheetsConnection)
 
 DATA_TTL_SECONDS = 10 * 60 # 10 mins
 #df: pd.DataFrame = conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
