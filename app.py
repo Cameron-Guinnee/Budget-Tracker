@@ -25,7 +25,8 @@ if st.button("🔄 Refresh Data"):
 conn: GSheetsConnection = st.connection("gsheets", type=GSheetsConnection)
 
 DATA_TTL_SECONDS = 10 * 60 # 10 mins
-df: pd.DataFrame = conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
+#df: pd.DataFrame = conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
+df = conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
 
 # Prep dataframe
 df.columns = df.iloc[0]
