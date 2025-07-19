@@ -1,7 +1,7 @@
+streamlit
 gspread==5.12.3
 pandas==1.5.3
 plotly==5.18.0
 st-gsheets-connection==0.0.3
-streamlit==1.22.0
 toml==0.10.2
 wordcloud==1.9.3
