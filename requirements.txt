@@ -1,6 +1,6 @@
 streamlit
 gspread==5.12.3
-pandas==0.20.0
+pandas==2.1.1
 plotly==5.18.0
 st-gsheets-connection==0.0.3
 toml==0.10.2
