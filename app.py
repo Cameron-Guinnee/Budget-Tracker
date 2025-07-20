@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import tabs
-from utils import get_google_sheet_titles_and_url, get_worksheet 
+from utils import get_google_sheet_titles_and_url,get_worksheet 
 
 st.set_page_config(
     page_title="Expense Tracker",
@@ -26,7 +26,10 @@ conn: GSheetsConnection = st.connection("gsheets", type=GSheetsConnection)
 
 
 DATA_TTL_SECONDS = 10 * 60 # 10 mins
-df: pd.DataFrame = conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
+
+worksheet = get_worksheet() 
+df: pd.DataFrame = conn.read(worksheet, ttl=DATA_TTL_SECONDS)
+#df: pd.DataFrame = conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
 
 
 # Prep dataframe
