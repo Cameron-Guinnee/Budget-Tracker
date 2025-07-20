@@ -26,7 +26,7 @@ conn: GSheetsConnection = st.connection("gsheets", type=GSheetsConnection)
 
 DATA_TTL_SECONDS = 10 * 60 # 10 mins
 
-df: pd.DataFrame = conn.read("gsheets", worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
+df: pd.DataFrame = conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
 
 
 # Prep dataframe
