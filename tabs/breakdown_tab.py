@@ -7,7 +7,6 @@ from typing import Callable
 
 def process_data(df: pd.DataFrame, get_savings_df: Callable[[int], pd.DataFrame], hide_savings: bool) -> pd.DataFrame:
     income: list[int] = df.loc[(df['Category'] == 'Income'), 'Price'].values
-   # if income:
     if income.size > 0:
         income_total = income[0]
         df = df.drop(df[(df['Category'] == 'Income')].index)
