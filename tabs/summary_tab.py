@@ -22,7 +22,8 @@ def summary_tab(df: pd.DataFrame) -> None:
     with savings_expenses_column:
         expenses_total = expenses.loc[:, 'Price'].sum(numeric_only=True)
         c_grouped_data_rows = [[ 'Expenses', expenses_total  ]]
-        if income:
+        #if income:
+        if income.size > 0:
             income_total = income[0]
             if not expenses_total:
                 expenses_total = 0
