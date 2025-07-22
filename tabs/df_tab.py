@@ -17,8 +17,8 @@ def df_tab(df: pd.DataFrame) -> None:
                 #.applymap(lambda x: f"color: {payment_method_color_map[str(x).split()[-1]]}", subset=["Payment Method"])
     owner_color_map = get_owner_color_map()
     if owner_color_map:
-        styled_df = styled_df.map(lambda x: f"color: {owner_color_map[str(x)]}", subset=["Owner"])
-       # styled_df = styled_df.applymap(lambda x: f"color: {owner_color_map[str(x)]}", subset=["Owner"])
+        styled_df = styled_df.map(lambda x: f"color: {owner_color_map.get(str(x), 'black')}", subset=["Owner"]) 
+       # styled_df = styled_df.map(lambda x: f"color: {owner_color_map[str(x)]}", subset=["Owner"])
     st.dataframe(styled_df, column_config={
         "Shared": st.column_config.CheckboxColumn(),
     }, hide_index=True, use_container_width=True)
