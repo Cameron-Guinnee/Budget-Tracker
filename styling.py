@@ -36,12 +36,15 @@ category_color_map = {
     "Entertainment": "#ffff00",
     "Dining": "#ffe4e1",
     "Petrol": "#b8860b",
+    "Transfer In": "#a8cbff",
+    "Transfer Out": "#ff492f",
     "Other": "#ffffff",
 }
 
 payment_method_color_map = {
     "Credit": "#bfe1f6",
     "Check": "#ffe5a0",
+    "Debit": "#e6cff2",
     "Cash": "#d4edbc",
 }
 
@@ -49,4 +52,5 @@ payment_method_label_prefix = {
     "Credit": "💳",
     "Check": "✉️",
     "Cash": "💵",
+    "Debit": "🏧",
 }
