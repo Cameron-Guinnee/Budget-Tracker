@@ -44,8 +44,8 @@ category_color_map = {
 payment_method_color_map = {
     "Credit": "#bfe1f6",
     "Check": "#ffe5a0",
-    "Debit": "#e6cff2",
     "Cash": "#d4edbc",
+    "Debit": "#e6cff2",
 }
 
 payment_method_label_prefix = {
