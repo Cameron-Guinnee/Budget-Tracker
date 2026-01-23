@@ -21,6 +21,7 @@ def expense_heatmap_tab(df: pd.DataFrame):
     if m_grouped_data.empty:
         st.info("No expense data available for this selection.")
         return
+
     categories = sorted(m_grouped_data["Category"].astype(str).str.strip().unique())
     months = sorted(m_grouped_data["Month"].unique())
 
@@ -39,4 +40,10 @@ def expense_heatmap_tab(df: pd.DataFrame):
         x=categories,
         y=months,
         labels=dict(color="Total Expenses"),
-        text_auto=".2s_
+        text_auto=".2s",
+    )
+    heatmap.update_yaxes(labelalias=month_labels, tickmode="linear")
+    heatmap.update_traces(
+        hovertemplate="Category: %{x}<br>Month: %{y}<br>Total: %{z:$,.2f}<extra></extra>"
+    )
+    st.plotly_chart(heatmap, use_container_width=True)
