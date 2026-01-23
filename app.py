@@ -58,6 +58,9 @@ summary_tab, accounts_tab, breakdown_tab, monthly_trends_tab, expense_heatmap_ta
 with summary_tab:
     tabs.render_summary_tab(filtered_df.copy())
 
+with accounts_tab:
+    tabs.render_accounts_tab(filtered_df.copy())
+
 with breakdown_tab:
     tabs.render_breakdown_tab(filtered_df.copy())
 
