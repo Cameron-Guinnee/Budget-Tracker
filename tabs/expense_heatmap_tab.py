@@ -3,15 +3,6 @@ import plotly.express as px
 import streamlit as st
 from utils import month_labels
 
-
-
-
-
-
-
-
-
-
 def expense_heatmap_tab(df: pd.DataFrame):
     df['Month'] = df['Date'].dt.month
     df = df.sort_values(by='Month')
