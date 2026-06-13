@@ -3,13 +3,27 @@ import streamlit as st
 from styling import category_color_map, payment_method_color_map, get_owner_color_map, payment_method_label_prefix
 from utils import get_worksheet_client, get_transaction_tab_shared_default, get_transaction_tab_presets
 
-def transaction_tab() -> None:
+import datetime
+import pandas as pd
+import streamlit as st
+from styling import category_color_map, payment_method_color_map, get_owner_color_map, payment_method_label_prefix
+from utils import get_worksheet_client, get_transaction_tab_shared_default, get_transaction_tab_presets
+
+def transaction_tab(df: pd.DataFrame | None = None) -> None:
     worksheet_client = get_worksheet_client()
     memo_default = ''
     category_options = [c for c in category_color_map.keys() if c != 'Savings']
     category_default = 0
     owner_options = list(get_owner_color_map().keys())
     owner_default = 0
+
+    # Derive account options from existing data, fall back to sensible defaults
+    if df is not None and "Account" in df.columns and df["Account"].notna().any():
+        account_options = sorted(df["Account"].dropna().unique().tolist())
+    else:
+        account_options = ["Checking", "Savings", "Cash"]
+    account_default = 0
+
     price_default = 0.0
     payment_options = list(payment_method_color_map.keys())
     payment_method_default = payment_options.index('Credit')
@@ -32,6 +46,8 @@ def transaction_tab() -> None:
                         category_default = category_options.index(preset_val['category'])
                     if 'owner' in preset_val:
                         owner_default = owner_options.index(preset_val['owner'])
+                    if 'account' in preset_val and preset_val['account'] in account_options:
+                        account_default = account_options.index(preset_val['account'])
                     if 'price' in preset_val:
                         price_default = float(preset_val['price'])
                     if 'payment_method' in preset_val:
@@ -47,6 +63,8 @@ def transaction_tab() -> None:
                 category = st.selectbox('Category',
                                         category_options,
                                         index=category_default, key='category')
+                account = st.selectbox('Account', account_options,
+                                       index=account_default, key='account')
             with col2:
                 owner = st.selectbox('Owner', owner_options,
                                      index=owner_default, key='owner')
@@ -69,7 +87,7 @@ def transaction_tab() -> None:
                         if price <= 0:
                             st.toast(':red[Invalid value for Price field]', icon='😢')
                     else:
-                        values = [date.strftime('%m/%d/%Y'), memo, category, owner, price, payment_method, shared]
+                        values = [date.strftime('%m/%d/%Y'), memo, category, owner, account, price, payment_method, shared]
                         res = worksheet_client.append_row(values, value_input_option = 'USER_ENTERED')
                         if res:
                             st.toast(':green[Transaction added successfully!]', icon='🎉')
