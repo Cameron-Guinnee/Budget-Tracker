@@ -19,6 +19,9 @@ def df_tab(df: pd.DataFrame) -> None:
     owner_color_map = get_owner_color_map()
     if owner_color_map:
         styled_df = styled_df.map(lambda x: f"color: {owner_color_map.get(str(x), 'black')}", subset=["Owner"]) 
+    st.write(df.dtypes)
+    st.write(df.index)
+    st.write(df.tail(10))
     st.dataframe(styled_df, column_config={
         "Shared": st.column_config.CheckboxColumn(),
     }, hide_index=True, use_container_width=True)
