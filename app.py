@@ -28,13 +28,7 @@ DATA_TTL_SECONDS = 10 * 60 # 10 mins
 
 df: pd.DataFrame = conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
 
-# Debugging for data tab error
 
-with st.expander("RAW data from conn.read()"):
-    st.write("dtypes:", df.dtypes.astype(str).to_dict())
-    st.write("shape:", df.shape)
-    raw_repr = df.head(5).map(lambda x: repr(x))
-    st.dataframe(raw_repr.astype(str), hide_index=True)
 
 # Prep dataframe
 df.columns = df.iloc[0]
