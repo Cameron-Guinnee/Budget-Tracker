@@ -4,6 +4,7 @@ from gspread.spreadsheet import Spreadsheet, Worksheet
 import logging
 from pathlib import Path
 import toml
+import pandas as pd
 
 month_labels = {m: calendar.month_abbr[m] for m in range(1,13)}
 
