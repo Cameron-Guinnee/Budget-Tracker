@@ -18,8 +18,6 @@ A personal finance dashboard built with [Streamlit](https://streamlit.io/) that 
 |---|---|
 | ![Monthly trends screenshot](docs/screenshots/monthly-trends.png) | ![Expense heatmap screenshot](docs/screenshots/heatmap.png) |
 
-> Tip: create a `docs/screenshots/` folder in the repo, drop your images in there, and update the paths above to match your filenames.
-
 ---
 
 ## ✨ Features
