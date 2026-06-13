@@ -130,6 +130,25 @@ def get_worksheet_client(config_file_path: str = ".streamlit/secrets.toml",
         logging.info("No config file found")
         return None
 
+
+def get_worksheet_dataframe(config_file_path: str = ".streamlit/secrets.toml") -> pd.DataFrame | None:
+    """
+    Read all data from the configured worksheet using the service account,
+    shaped the same way pd.read_csv(csv_export_url) was (first row becomes
+    the DataFrame header, matching the old conn.read() behavior).
+
+    Rows that are entirely empty (e.g. phantom rows from an over-extended
+    data validation range) are dropped before building the DataFrame.
+    """
+    worksheet = get_worksheet_client(config_file_path=config_file_path, check_write_perms=False)
+    if worksheet:
+        values = worksheet.get_all_values()
+        if len(values) >= 1:
+            header, *rows = values
+            rows = [row for row in rows if any(cell.strip() for cell in row)]
+            return pd.DataFrame(rows, columns=header)
+    return None
+
 def get_google_sheet_titles_and_url(
         config_file_path: str = ".streamlit/secrets.toml",
         default_title: str | None = "Google Sheet"
