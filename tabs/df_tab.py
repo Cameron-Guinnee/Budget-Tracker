@@ -3,6 +3,9 @@ import streamlit as st
 from styling import category_color_map, payment_method_color_map, payment_method_label_prefix, get_owner_color_map
 
 def df_tab(df: pd.DataFrame) -> None:
+    df = df.reset_index(drop=True)
+    df["Price"] = df["Price"].astype(float)
+
     with pd.option_context('mode.chained_assignment', None):
         df.loc[:,"Payment Method"] = df["Payment Method"].map(lambda x: f"{payment_method_label_prefix[x]} {x}")
 
