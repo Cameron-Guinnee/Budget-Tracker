@@ -74,7 +74,7 @@ with wordcloud_tab:
     tabs.render_wordcloud_tab(filtered_df.copy())
 
 with add_transaction_tab:
-    tabs.render_add_transaction_tab(filtered_df.copy())
+    tabs.render_add_transaction_tab()
 
 with df_tab:
     tabs.render_df_tab(filtered_df.copy())
