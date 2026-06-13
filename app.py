@@ -34,7 +34,6 @@ with st.expander("RAW data from conn.read()"):
     st.write("shape:", df.shape)
     raw_repr = df.head(5).map(lambda x: repr(x))
     st.dataframe(raw_repr.astype(str), hide_index=True)
-st.write("Row count from sheet:", df.shape)
 
 
 # Prep dataframe
