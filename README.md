@@ -2,7 +2,7 @@
 
 A personal finance dashboard built with [Streamlit](https://streamlit.io/) that connects directly to a Google Sheet to visualize, filter, and log income and expenses.
 
-**🔗 Live App:** [budget-tracker-hqzvmiazybvhhkjkv4pih8.streamlit.app](https://budget-tracker-hqzvmiazybvhhkjkv4pih8.streamlit.app/)
+**🔗 Live Demo:** [budget-tracker-hqzvmiazybvhhkjkv4pih8.streamlit.app](https://budget-tracker-hqzvmiazybvhhkjkv4pih8.streamlit.app/)
 
 ---
 
