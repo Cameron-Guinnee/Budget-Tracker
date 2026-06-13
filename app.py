@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import tabs
-from utils import get_google_sheet_titles_and_url,get_worksheet 
+from utils import get_google_sheet_titles_and_url, get_worksheet, get_worksheet_dataframe
 
 st.set_page_config(
     page_title="Expense Tracker",
@@ -24,11 +24,19 @@ if st.button("🔄 Refresh Data"):
 # Create a connection object.
 conn: GSheetsConnection = st.connection("gsheets", type=GSheetsConnection)
 
-DATA_TTL_SECONDS = 10 * 60 # 10 mins
+DATA_TTL_SECONDS = 10 * 60  # 10 mins
 
+@st.cache_data(ttl=DATA_TTL_SECONDS)
+def load_data() -> pd.DataFrame:
+    df = get_worksheet_dataframe()
+    if df is not None:
+        return df
+    # Fallback to the old public-CSV read path if service account read fails
+    conn: GSheetsConnection = st.connection("gsheets", type=GSheetsConnection)
+    return conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
 
+df: pd.DataFrame = load_data()
 
-df: pd.DataFrame = conn.read(worksheet=get_worksheet(), ttl=DATA_TTL_SECONDS)
 with st.expander("RAW data from conn.read()"):
     st.write("dtypes:", df.dtypes.astype(str).to_dict())
     st.write("shape:", df.shape)
