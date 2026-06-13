@@ -102,7 +102,7 @@ def get_spreadsheet_client(config_file_path: str = ".streamlit/secrets.toml") ->
     return None
 
 def get_worksheet_client(config_file_path: str = ".streamlit/secrets.toml",
-                         check_write_perms: bool = True) -> Worksheet | None:
+                          check_write_perms: bool = True) -> Worksheet | None:
     """
     Get worksheet client using service account.
     """
@@ -117,18 +117,18 @@ def get_worksheet_client(config_file_path: str = ".streamlit/secrets.toml",
             if spreadsheet:
                 if check_write_perms:
                     permissions = [ p for p in spreadsheet.list_permissions() \
-                                if p['emailAddress'] == config['client_email'] ]
+                        if p.get('emailAddress') == config['client_email'] ]
                     if len(permissions) > 0:
                         for p in permissions:
-                            if p['role'] != 'writer' and \
-                                p['deleted'] != False and \
-                                p['pendingOwner'] != False:
+                            if p.get('role') != 'writer' and \
+                               p.get('deleted', False) != False and \
+                               p.get('pendingOwner', False) != False:
                                 return None
                 worksheet = spreadsheet.worksheet(config['worksheet'])
                 return worksheet
     except (FileNotFoundError, toml.decoder.TomlDecodeError, KeyError):
         logging.info("No config file found")
-    return None
+        return None
 
 def get_google_sheet_titles_and_url(
         config_file_path: str = ".streamlit/secrets.toml",
