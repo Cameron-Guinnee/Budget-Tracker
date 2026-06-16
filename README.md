@@ -1,4 +1,4 @@
-# 💰 Northstar
+# 💰 Ledgerline
 
 A personal finance dashboard built with [Streamlit](https://streamlit.io/) that connects directly to a Google Sheet to visualize, filter, and log income and expenses.
 
