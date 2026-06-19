@@ -1,0 +1,4 @@
+from portfolio_tabs.holdings_tab import holdings_tab as render_holdings_tab
+from portfolio_tabs.performance_tab import performance_tab as render_performance_tab
+from portfolio_tabs.allocation_tab import allocation_tab as render_allocation_tab
+from portfolio_tabs.add_transaction_tab import add_transaction_tab as render_add_transaction_tab
