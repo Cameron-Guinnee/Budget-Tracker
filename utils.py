@@ -121,9 +121,9 @@ def get_worksheet_client(config_file_path: str = ".streamlit/secrets.toml",
                         if p.get('emailAddress') == config['client_email'] ]
                     if len(permissions) > 0:
                         for p in permissions:
-                            if p.get('role') != 'writer' and \
-                               p.get('deleted', False) != False and \
-                               p.get('pendingOwner', False) != False:
+                            if p.get('role') != 'writer' or \
+                               p.get('deleted', False) or \
+                               p.get('pendingOwner', False):
                                 return None
                 worksheet = spreadsheet.worksheet(config['worksheet'])
                 return worksheet

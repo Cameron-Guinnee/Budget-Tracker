@@ -113,33 +113,38 @@ def compute_holdings(df: pd.DataFrame) -> pd.DataFrame:
     """
     Compute current open positions from a prepped transaction DataFrame.
     Returns one row per symbol with cost basis and realized gain columns.
+    Uses a running average cost basis computed in date order to avoid
+    blending in future purchases when valuing past sales.
     """
     records = []
     for symbol, group in df.groupby("Symbol"):
         asset_type = group["Asset Type"].iloc[0]
-        buys = group[group["Transaction Type"] == "Buy"]
-        sells = group[group["Transaction Type"] == "Sell"]
-        dividends = group[group["Transaction Type"] == "Dividend"]
+        running_shares = 0.0
+        running_cost = 0.0
+        realized_gains = 0.0
+        dividend_income = 0.0
 
-        total_bought = buys["Shares"].sum()
-        total_sold = sells["Shares"].sum()
-        shares_held = total_bought - total_sold
+        for _, txn in group.sort_values("Date").iterrows():
+            txn_type = txn["Transaction Type"]
+            if txn_type == "Buy":
+                running_shares += txn["Shares"]
+                running_cost += txn["Total"]
+            elif txn_type == "Sell" and running_shares > 0:
+                avg = running_cost / running_shares
+                realized_gains += txn["Total"] - txn["Shares"] * avg
+                running_shares -= txn["Shares"]
+                running_cost = running_shares * avg
+            elif txn_type == "Dividend":
+                dividend_income += txn["Total"]
 
-        total_cost_of_buys = buys["Total"].sum()
-        avg_cost = (total_cost_of_buys / total_bought) if total_bought > 0 else 0.0
-
-        sell_proceeds = sells["Total"].sum()
-        cost_of_sold = total_sold * avg_cost
-        realized_gains = sell_proceeds - cost_of_sold
-
-        dividend_income = dividends["Total"].sum()
+        avg_cost = (running_cost / running_shares) if running_shares > 0 else 0.0
 
         records.append({
             "Symbol": symbol,
             "Asset Type": asset_type,
-            "Shares": shares_held,
+            "Shares": running_shares,
             "Avg Cost": avg_cost,
-            "Cost Basis": shares_held * avg_cost,
+            "Cost Basis": running_cost,
             "Realized Gains": realized_gains,
             "Dividend Income": dividend_income,
         })
@@ -152,14 +157,25 @@ def compute_holdings(df: pd.DataFrame) -> pd.DataFrame:
 # ── Market data ────────────────────────────────────────────────────────────
 
 def fetch_live_prices(symbols: list[str]) -> dict[str, float]:
-    """Return {symbol: last_price}. Missing symbols get NaN."""
+    """Return {symbol: last_price}. Missing symbols get NaN. Batches via yf.Tickers."""
     prices: dict[str, float] = {}
-    for sym in symbols:
-        try:
-            prices[sym] = float(yf.Ticker(sym).fast_info.last_price)
-        except Exception:
-            logging.warning("Could not fetch live price for %s", sym)
-            prices[sym] = float("nan")
+    if not symbols:
+        return prices
+    try:
+        tickers = yf.Tickers(" ".join(symbols))
+        for sym in symbols:
+            try:
+                prices[sym] = float(tickers.tickers[sym].fast_info.last_price)
+            except Exception:
+                logging.warning("Could not fetch live price for %s", sym)
+                prices[sym] = float("nan")
+    except Exception:
+        logging.warning("Batch price fetch failed, falling back to per-ticker")
+        for sym in symbols:
+            try:
+                prices[sym] = float(yf.Ticker(sym).fast_info.last_price)
+            except Exception:
+                prices[sym] = float("nan")
     return prices
 
 
@@ -183,15 +199,35 @@ def compute_portfolio_value_over_time(df: pd.DataFrame) -> pd.DataFrame:
 
     portfolio_value = pd.Series(0.0, index=date_index)
 
+    try:
+        raw = yf.download(
+            symbols,
+            start=start_date,
+            end=end_date + pd.Timedelta(days=1),
+            auto_adjust=True,
+            progress=False,
+        )["Close"]
+        # yf.download returns a Series (not DataFrame) when there's only one ticker
+        if isinstance(raw, pd.Series):
+            raw = raw.to_frame(name=symbols[0])
+        raw.index = raw.index.normalize().tz_localize(None)
+        all_hist = raw.reindex(date_index).ffill()
+    except Exception:
+        logging.warning("Batch history download failed; falling back to per-ticker")
+        all_hist = pd.DataFrame(index=date_index)
+        for sym in symbols:
+            try:
+                hist = yf.Ticker(sym).history(
+                    start=start_date,
+                    end=end_date + pd.Timedelta(days=1),
+                )["Close"]
+                hist.index = hist.index.normalize().tz_localize(None)
+                all_hist[sym] = hist.reindex(date_index).ffill()
+            except Exception:
+                logging.warning("Could not fetch history for %s", sym)
+
     for sym in symbols:
-        try:
-            hist = yf.Ticker(sym).history(
-                start=start_date,
-                end=end_date + pd.Timedelta(days=1),
-            )["Close"]
-            hist.index = hist.index.normalize().tz_localize(None)
-        except Exception:
-            logging.warning("Could not fetch history for %s", sym)
+        if sym not in all_hist.columns:
             continue
 
         sym_txns = df[df["Symbol"] == sym].copy()
@@ -205,8 +241,7 @@ def compute_portfolio_value_over_time(df: pd.DataFrame) -> pd.DataFrame:
         daily_delta = daily_delta.reindex(date_index, fill_value=0.0)
         cumulative_shares = daily_delta.cumsum()
 
-        prices = hist.reindex(date_index).ffill()
-        portfolio_value += (cumulative_shares * prices).fillna(0.0)
+        portfolio_value += (cumulative_shares * all_hist[sym]).fillna(0.0)
 
     return (
         portfolio_value

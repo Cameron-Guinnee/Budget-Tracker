@@ -1,3 +1,4 @@
+import io
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -6,7 +7,7 @@ from portfolio_utils import compute_holdings, compute_portfolio_value_over_time
 
 @st.cache_data(ttl=3600, show_spinner="Building portfolio history (this may take a moment)…")
 def _cached_value_over_time(df_json: str) -> pd.DataFrame:
-    df = pd.read_json(df_json, orient="records", convert_dates=["Date"])
+    df = pd.read_json(io.StringIO(df_json), orient="records", convert_dates=["Date"])
     return compute_portfolio_value_over_time(df)
 
 

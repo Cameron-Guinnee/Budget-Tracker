@@ -21,7 +21,7 @@ df: pd.DataFrame = load_data()
 # Prep dataframe
 df.columns = df.iloc[0]
 df = df[1:]
-df = df.dropna()
+df = df.dropna(subset=["Date", "Price", "Category"])
 df['Memo'] = df['Memo'].str.strip()
 df["Price"] = pd.to_numeric(df['Price'].map(lambda x: str(x).lstrip('$').replace(',', '')))
 df["Date"] = pd.to_datetime(df["Date"], format="%m/%d/%Y")
