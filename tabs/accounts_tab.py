@@ -92,8 +92,6 @@ def _balance_timeseries(df: pd.DataFrame, start: pd.Timestamp, end: pd.Timestamp
     return out
 
 def accounts_tab(df: pd.DataFrame):
-    st.header("Account balances")
-
     df = _ensure_account_and_signed_amount(df)
 
     # Current balances (as-of max date in data)

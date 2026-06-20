@@ -1,14 +1,9 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from portfolio_utils import compute_holdings, fetch_live_prices
+from portfolio_utils import compute_holdings, cached_live_prices as _cached_live_prices
 
 ASSET_TYPE_COLORS = {"Stock": "#4169e1", "Crypto": "#f7931a"}
-
-
-@st.cache_data(ttl=300, show_spinner="Fetching live prices…")
-def _cached_live_prices(symbols: tuple[str, ...]) -> dict[str, float]:
-    return fetch_live_prices(list(symbols))
 
 
 def holdings_tab(df: pd.DataFrame) -> None:

@@ -4,6 +4,7 @@ import logging
 from pathlib import Path
 import toml
 import pandas as pd
+import streamlit as st
 import yfinance as yf
 from gspread import service_account_from_dict
 
@@ -160,6 +161,11 @@ def fetch_live_prices(symbols: list[str]) -> dict[str, float]:
             logging.warning("Could not fetch live price for %s", sym)
             prices[sym] = float("nan")
     return prices
+
+
+@st.cache_data(ttl=300, show_spinner="Fetching live prices…")
+def cached_live_prices(symbols: tuple[str, ...]) -> dict[str, float]:
+    return fetch_live_prices(list(symbols))
 
 
 def compute_portfolio_value_over_time(df: pd.DataFrame) -> pd.DataFrame:
