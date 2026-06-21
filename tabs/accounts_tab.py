@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from utils import get_account_apy_config
 
 INFLOW_CATEGORIES_DEFAULT = {"Income", "Deposit", "Transfer In"}
 
@@ -136,3 +137,82 @@ def accounts_tab(df: pd.DataFrame):
     fig.update_layout(hovermode="x unified")
 
     st.plotly_chart(fig, use_container_width=True)
+
+    # ── APY tracking ──────────────────────────────────────────────────────
+    apy_config = get_account_apy_config()
+    if not apy_config:
+        return
+
+    st.divider()
+    st.subheader("Savings Interest Tracking")
+    st.caption(
+        "Projected vs. logged interest for accounts with an APY configured in secrets.toml. "
+        "Uses end-of-month balance × (APY / 12) as the monthly expected interest."
+    )
+
+    # Get unfiltered data for accurate carry-in across all time
+    df_all = _ensure_account_and_signed_amount(df)
+    df_all = df_all.sort_values("Date")
+
+    # Find "Interest" transactions in the selected date range
+    interest_cats = {"Interest", "Savings Interest", "Interest Income"}
+    interest_txns = df_all[df_all["Category"].isin(interest_cats)].copy()
+
+    rows = []
+    for acct, apy in apy_config.items():
+        monthly_rate = apy / 100 / 12
+        acct_df = df_all[df_all["Account"] == acct]
+        if acct_df.empty:
+            continue
+
+        acct_start = acct_df["Date"].min()
+        acct_end = pd.Timestamp.today().normalize()
+        month_ends = pd.date_range(start=acct_start, end=acct_end, freq="ME")
+
+        for month_end in month_ends:
+            month_start = month_end.replace(day=1)
+            balance = float(acct_df[acct_df["Date"] <= month_end]["Signed Amount"].sum())
+            projected = balance * monthly_rate if balance > 0 else 0.0
+
+            actual = float(
+                interest_txns[
+                    (interest_txns["Account"] == acct) &
+                    (interest_txns["Date"] >= month_start) &
+                    (interest_txns["Date"] <= month_end)
+                ]["Price"].sum()
+            )
+            rows.append({
+                "Account": acct,
+                "Month": month_end.strftime("%Y-%m"),
+                "End Balance": balance,
+                "APY %": apy,
+                "Projected Interest": round(projected, 2),
+                "Logged Interest": round(actual, 2),
+                "Difference": round(actual - projected, 2),
+            })
+
+    if not rows:
+        st.info("No data found for configured APY accounts.")
+        return
+
+    apy_df = pd.DataFrame(rows)
+    for acct in apy_df["Account"].unique():
+        acct_apy = apy_df[apy_df["Account"] == acct]
+        total_proj = acct_apy["Projected Interest"].sum()
+        total_logged = acct_apy["Logged Interest"].sum()
+        a1, a2, a3 = st.columns(3)
+        a1.metric(f"{acct} — APY configured", f"{apy_config[acct]:.2f}%")
+        a2.metric("Total Projected", f"${total_proj:,.2f}")
+        a3.metric("Total Logged", f"${total_logged:,.2f}",
+                  delta=f"${total_logged - total_proj:+,.2f}")
+
+        with st.expander(f"{acct} month-by-month"):
+            st.dataframe(
+                acct_apy.style.format({
+                    "End Balance": "${:,.2f}",
+                    "Projected Interest": "${:,.2f}",
+                    "Logged Interest": "${:,.2f}",
+                    "Difference": "${:,.2f}",
+                }),
+                hide_index=True, use_container_width=True,
+            )

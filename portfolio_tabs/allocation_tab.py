@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from portfolio_utils import compute_holdings, cached_live_prices as _cached_live_prices
+from portfolio_utils import compute_holdings, cached_live_prices as _cached_live_prices, cached_sector_info
 
 
 def allocation_tab(df: pd.DataFrame) -> None:
@@ -58,6 +58,22 @@ def allocation_tab(df: pd.DataFrame) -> None:
         fig_type.update_layout(showlegend=False)
         st.plotly_chart(fig_type, use_container_width=True)
 
+    # Sector allocation
+    sectors = cached_sector_info(tuple(open_positions["Symbol"].tolist()))
+    open_positions["Sector"] = open_positions["Symbol"].map(sectors).fillna("Unknown")
+    sector_totals = open_positions.groupby("Sector")["Current Value"].sum().reset_index()
+    if not sector_totals.empty:
+        fig_sector = px.pie(
+            sector_totals, values="Current Value", names="Sector",
+            hole=0.65, title="Allocation by Sector",
+        )
+        fig_sector.update_traces(
+            textinfo="percent+label",
+            hovertemplate="%{label}<br>%{value:$,.2f} (%{percent})<extra></extra>",
+        )
+        fig_sector.update_layout(showlegend=False)
+        st.plotly_chart(fig_sector, use_container_width=True)
+
     st.divider()
 
     # Treemap for a second look at symbol-level allocation
@@ -66,7 +82,7 @@ def allocation_tab(df: pd.DataFrame) -> None:
 
     fig_tree = px.treemap(
         open_positions,
-        path=["Asset Type", "Symbol"],
+        path=["Asset Type", "Sector", "Symbol"],
         values="Current Value",
         color="Asset Type",
         color_discrete_map={"Stock": "#4169e1", "Crypto": "#f7931a"},

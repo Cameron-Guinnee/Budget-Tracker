@@ -248,3 +248,147 @@ def compute_portfolio_value_over_time(df: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
         .rename(columns={"index": "Date", 0: "Total Value"})
     )
+
+
+# ── Analytics ──────────────────────────────────────────────────────────────
+
+def compute_portfolio_metrics(value_series: pd.Series) -> dict:
+    """Sharpe ratio (0% RFR), max drawdown, and annualized volatility from daily values."""
+    returns = value_series.pct_change().dropna()
+    if len(returns) < 2 or returns.std() == 0:
+        return {"sharpe": None, "max_drawdown": None, "volatility": None}
+    volatility = float(returns.std() * (252 ** 0.5))
+    sharpe = float(returns.mean() / returns.std() * (252 ** 0.5))
+    rolling_max = value_series.expanding().max()
+    max_drawdown = float(((value_series - rolling_max) / rolling_max).min())
+    return {"sharpe": sharpe, "max_drawdown": max_drawdown, "volatility": volatility}
+
+
+def compute_drawdown_series(value_series: pd.Series) -> pd.Series:
+    rolling_max = value_series.expanding().max()
+    return (value_series - rolling_max) / rolling_max * 100
+
+
+def compute_xirr(cashflows: list[tuple], terminal_value: float = 0.0,
+                  terminal_date: pd.Timestamp | None = None) -> float | None:
+    """
+    Money-weighted annualized return (XIRR).
+    cashflows: list of (date, amount) — negative for outflows (buys), positive for inflows.
+    terminal_value added as a positive cashflow at terminal_date (today if None).
+    Returns None if scipy is unavailable or if the NPV function has no root.
+    """
+    try:
+        from scipy.optimize import brentq
+    except ImportError:
+        return None
+
+    all_flows = list(cashflows)
+    if terminal_value > 0:
+        td = terminal_date or pd.Timestamp.today()
+        all_flows.append((td, terminal_value))
+
+    if not any(cf[1] > 0 for cf in all_flows) or not any(cf[1] < 0 for cf in all_flows):
+        return None
+
+    t0 = min(cf[0] for cf in all_flows)
+    years = [(cf[0] - t0).days / 365.25 for cf in all_flows]
+    amounts = [cf[1] for cf in all_flows]
+
+    def npv(rate):
+        return sum(a / (1 + rate) ** t for a, t in zip(amounts, years))
+
+    try:
+        return float(brentq(npv, -0.9999, 1000.0, maxiter=1000))
+    except Exception:
+        return None
+
+
+def compute_tax_lots(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    FIFO tax-lot matching. Returns one row per realized lot with Term = Short-term / Long-term.
+    Short-term: held < 365 days; Long-term: held >= 365 days.
+    """
+    records = []
+    for symbol, group in df.groupby("Symbol"):
+        lots: list[dict] = []
+        for _, txn in group.sort_values("Date").iterrows():
+            if txn["Transaction Type"] == "Buy":
+                lots.append({
+                    "date": txn["Date"],
+                    "shares": float(txn["Shares"]),
+                    "cost_per_share": float(txn["Price Per Share"]),
+                })
+            elif txn["Transaction Type"] == "Sell":
+                remaining = float(txn["Shares"])
+                sell_date = txn["Date"]
+                proceeds_per_share = float(txn["Price Per Share"])
+                while remaining > 1e-9 and lots:
+                    lot = lots[0]
+                    sold = min(remaining, lot["shares"])
+                    days_held = (sell_date - lot["date"]).days
+                    records.append({
+                        "Symbol": symbol,
+                        "Buy Date": lot["date"],
+                        "Sell Date": sell_date,
+                        "Shares": sold,
+                        "Cost Per Share": lot["cost_per_share"],
+                        "Cost Basis": round(sold * lot["cost_per_share"], 4),
+                        "Proceeds": round(sold * proceeds_per_share, 4),
+                        "Gain/Loss": round(sold * (proceeds_per_share - lot["cost_per_share"]), 4),
+                        "Days Held": days_held,
+                        "Term": "Long-term" if days_held >= 365 else "Short-term",
+                    })
+                    lot["shares"] -= sold
+                    remaining -= sold
+                    if lot["shares"] <= 1e-9:
+                        lots.pop(0)
+
+    cols = ["Symbol", "Buy Date", "Sell Date", "Shares", "Cost Per Share",
+            "Cost Basis", "Proceeds", "Gain/Loss", "Days Held", "Term"]
+    return pd.DataFrame(records, columns=cols) if records else pd.DataFrame(columns=cols)
+
+
+# ── External data (cached) ─────────────────────────────────────────────────
+
+@st.cache_data(ttl=3600, show_spinner="Fetching sector data…")
+def cached_sector_info(symbols: tuple[str, ...]) -> dict[str, str]:
+    result = {}
+    for sym in symbols:
+        try:
+            info = yf.Ticker(sym).info
+            result[sym] = info.get("sector") or info.get("quoteType") or "Unknown"
+        except Exception:
+            result[sym] = "Unknown"
+    return result
+
+
+@st.cache_data(ttl=3600, show_spinner="Fetching dividend data…")
+def cached_dividend_info(symbols: tuple[str, ...]) -> dict[str, dict]:
+    result = {}
+    for sym in symbols:
+        try:
+            info = yf.Ticker(sym).info
+            result[sym] = {
+                "rate": info.get("dividendRate"),
+                "yield_pct": (info.get("dividendYield") or 0.0) * 100,
+                "ex_date": info.get("exDividendDate"),
+            }
+        except Exception:
+            result[sym] = {"rate": None, "yield_pct": 0.0, "ex_date": None}
+    return result
+
+
+@st.cache_data(ttl=3600, show_spinner="Fetching benchmark data…")
+def fetch_benchmark_history(symbol: str, start: pd.Timestamp,
+                             end: pd.Timestamp) -> pd.Series:
+    try:
+        raw = yf.download(symbol, start=start, end=end + pd.Timedelta(days=1),
+                          auto_adjust=True, progress=False)["Close"]
+        if isinstance(raw, pd.DataFrame):
+            raw = raw.iloc[:, 0]
+        raw.index = raw.index.normalize().tz_localize(None)
+        date_index = pd.date_range(start=start, end=end, freq="D")
+        return raw.reindex(date_index).ffill().bfill()
+    except Exception:
+        logging.warning("Could not fetch benchmark history for %s", symbol)
+        return pd.Series(dtype=float)

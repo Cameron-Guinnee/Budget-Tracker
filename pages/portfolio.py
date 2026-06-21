@@ -50,8 +50,8 @@ token_uri = "https://oauth2.googleapis.com/token"
 df = prep_portfolio_df(raw_df) if not raw_df.empty else raw_df
 
 # ── Tabs ───────────────────────────────────────────────────────────────────
-holdings_tab, performance_tab, allocation_tab, add_tab = st.tabs([
-    "💼 Holdings", "📈 Performance", "🥧 Allocation", "➕ Add Transaction",
+holdings_tab, performance_tab, allocation_tab, dividends_tab, add_tab = st.tabs([
+    "💼 Holdings", "📈 Performance", "🥧 Allocation", "💰 Dividends", "➕ Add Transaction",
 ])
 
 with holdings_tab:
@@ -62,6 +62,9 @@ with performance_tab:
 
 with allocation_tab:
     portfolio_tabs.render_allocation_tab(df.copy())
+
+with dividends_tab:
+    portfolio_tabs.render_dividends_tab(df.copy())
 
 with add_tab:
     portfolio_tabs.render_add_transaction_tab()

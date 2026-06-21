@@ -6,3 +6,5 @@ from tabs.wordcloud_tab import wordcloud_tab as render_wordcloud_tab
 from tabs.accounts_tab import accounts_tab as render_accounts_tab
 from tabs.add_transaction_tab import transaction_tab as render_add_transaction_tab
 from tabs.df_tab import df_tab as render_df_tab
+from tabs.budgets_tab import budgets_tab as render_budgets_tab
+from tabs.subscriptions_tab import subscriptions_tab as render_subscriptions_tab

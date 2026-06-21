@@ -78,9 +78,10 @@ kpi4.metric("📊 Savings Rate", f"{savings_pct:.1f}%")
 st.divider()
 
 # ── Tabs ───────────────────────────────────────────────────────────────────
-summary_tab, accounts_tab, breakdown_tab, monthly_trends_tab, expense_heatmap_tab, wordcloud_tab, add_transaction_tab, df_tab = st.tabs([
+summary_tab, accounts_tab, breakdown_tab, monthly_trends_tab, expense_heatmap_tab, wordcloud_tab, budgets_tab, add_transaction_tab, subscriptions_tab, df_tab = st.tabs([
     "📋 Summary", "🏦 Accounts", "📊 Breakdown", "📈 Monthly Trends",
-    "🗓️ Expense Heatmap", "☁️ Word Cloud", "➕ Add Transaction", "🗃️ Data",
+    "🗓️ Expense Heatmap", "☁️ Word Cloud", "🎯 Budgets", "➕ Add Transaction",
+    "🔍 Insights", "🗃️ Data",
 ])
 
 with summary_tab:
@@ -101,8 +102,14 @@ with expense_heatmap_tab:
 with wordcloud_tab:
     tabs.render_wordcloud_tab(filtered_df.copy())
 
+with budgets_tab:
+    tabs.render_budgets_tab(filtered_df.copy())
+
 with add_transaction_tab:
     tabs.render_add_transaction_tab(filtered_df.copy())
+
+with subscriptions_tab:
+    tabs.render_subscriptions_tab(filtered_df.copy())
 
 with df_tab:
     tabs.render_df_tab(filtered_df.copy())

@@ -150,6 +150,44 @@ def get_worksheet_dataframe(config_file_path: str = ".streamlit/secrets.toml") -
             return pd.DataFrame(rows, columns=header)
     return None
 
+def get_budget_config(
+        config_file_path: str = ".streamlit/secrets.toml"
+) -> dict[str, float]:
+    """
+    Return {category: monthly_budget_amount} from secrets.toml.
+
+    Config format:
+        [expense_tracker.budgets]
+        Grocery = 500
+        Dining = 200
+    """
+    try:
+        secrets = toml.loads(Path(config_file_path).read_text(encoding="utf-8"))
+        raw = secrets.get("expense_tracker", {}).get("budgets", {})
+        return {k: float(v) for k, v in raw.items()}
+    except (FileNotFoundError, toml.decoder.TomlDecodeError):
+        return {}
+
+
+def get_account_apy_config(
+        config_file_path: str = ".streamlit/secrets.toml"
+) -> dict[str, float]:
+    """
+    Return {account_name: apy_percent} from secrets.toml.
+
+    Config format:
+        [[expense_tracker.accounts]]
+        name = "Savings"
+        apy = 4.5
+    """
+    try:
+        secrets = toml.loads(Path(config_file_path).read_text(encoding="utf-8"))
+        accounts = secrets.get("expense_tracker", {}).get("accounts", [])
+        return {a["name"]: float(a["apy"]) for a in accounts if "name" in a and "apy" in a}
+    except (FileNotFoundError, toml.decoder.TomlDecodeError):
+        return {}
+
+
 def get_google_sheet_titles_and_url(
         config_file_path: str = ".streamlit/secrets.toml",
         default_title: str | None = "Google Sheet"
