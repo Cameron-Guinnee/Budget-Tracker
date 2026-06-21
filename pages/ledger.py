@@ -80,8 +80,8 @@ st.divider()
 # ── Tabs ───────────────────────────────────────────────────────────────────
 summary_tab, accounts_tab, breakdown_tab, monthly_trends_tab, expense_heatmap_tab, wordcloud_tab, budgets_tab, subscriptions_tab, df_tab, add_transaction_tab = st.tabs([
     "📋 Summary", "🏦 Accounts", "📊 Breakdown", "📈 Monthly Trends",
-    "🗓️ Expense Heatmap", "☁️ Word Cloud", "🎯 Budgets", "➕ Add Transaction",
-    "🔍 Insights", "🗃️ Data",
+    "🗓️ Expense Heatmap", "☁️ Word Cloud", "🎯 Budgets", "🔍 Insights", 
+    "🗃️ Data", "➕ Add Transaction"
 ])
 
 with summary_tab:
