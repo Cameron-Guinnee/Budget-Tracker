@@ -28,7 +28,7 @@ def holdings_tab(df: pd.DataFrame) -> None:
         ).where(open_positions["Cost Basis"] > 0)
 
         total_value = open_positions["Current Value"].sum()
-        open_positions["Weight %"] = (open_positions["Current Value"] / total_value * 100).where(total_value > 0)
+        open_positions["Weight %"] = (open_positions["Current Value"] / total_value * 100) if total_value > 0 else 0.0
         total_cost = open_positions["Cost Basis"].sum()
         total_unrealized = open_positions["Unrealized P&L"].sum()
         total_realized = holdings["Realized Gains"].sum()
