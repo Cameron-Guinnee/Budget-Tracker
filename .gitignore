@@ -1,6 +1,25 @@
+# ── Python ─────────────────────────────────────────────────────────────────
 **/__pycache__/*
+*.pyc
+*.pyo
 
-.streamlit/*.toml
+# ── Streamlit ───────────────────────────────────────────────────────────────
+# Ignore secrets but keep config.toml (theme, server settings, etc.)
+.streamlit/secrets.toml
 .streamlit/*.json
 
+# ── Testing & coverage ──────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Virtual environments ────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Environment files ───────────────────────────────────────────────────────
+.env
+
+# ── Project-specific ────────────────────────────────────────────────────────
 ROADMAP.md
