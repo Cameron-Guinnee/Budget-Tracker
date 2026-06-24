@@ -44,7 +44,7 @@ def summary_tab(df: pd.DataFrame) -> None:
                                                                     font_size=20,
                                                                     showarrow=False)])
         savings_expenses_pie_chart.update_traces(textinfo="percent+label", hovertemplate="%{label} (%{percent}) <br> %{value:$,.2f}")
-        st.plotly_chart(savings_expenses_pie_chart, theme=None, use_container_width=True)
+        st.plotly_chart(savings_expenses_pie_chart, use_container_width=True)
     
     with expenses_breakdown_column:
         total_expenses = expenses.loc[:, 'Price'].sum(numeric_only=True)
@@ -56,7 +56,7 @@ def summary_tab(df: pd.DataFrame) -> None:
                                                                     font_size=20,
                                                                     showarrow=False)])
         expenses_breakdown_pie_chart.update_traces(textinfo="percent+label", hovertemplate="%{label} (%{percent}) <br> %{value:$,.2f}")
-        st.plotly_chart(expenses_breakdown_pie_chart, theme=None, use_container_width=True)
+        st.plotly_chart(expenses_breakdown_pie_chart, use_container_width=True)
 
     if len(owners) > 1:
         with shared_expenses_column:
@@ -75,4 +75,4 @@ def summary_tab(df: pd.DataFrame) -> None:
                                                                         font_size=20,
                                                                         showarrow=False)])
             shared_expenses_pie_chart.update_traces(textinfo="percent+label", hovertemplate="%{label} (%{percent}) <br> %{value:$,.2f}")
-            st.plotly_chart(shared_expenses_pie_chart, theme=None, use_container_width=True)
+            st.plotly_chart(shared_expenses_pie_chart, use_container_width=True)

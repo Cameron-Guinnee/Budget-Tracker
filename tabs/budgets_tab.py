@@ -43,9 +43,9 @@ def budgets_tab(df: pd.DataFrame) -> None:
 
     def _render_row(cat, spent, limit, pct, over):
         col_label, col_bar, col_nums = st.columns([2, 4, 2])
-        col_label.write(f"**{cat}**")
-        bar_color = "🔴" if over else ("🟡" if pct > 0.8 else "🟢")
-        col_label.caption(bar_color)
+        indicator = "🔴" if over else ("🟡" if pct > 0.8 else "🟢")
+        col_label.write(f"{indicator} **{cat}**")
+        col_label.caption(f"{pct * 100:.0f}% used")
         col_bar.progress(min(pct, 1.0))
         col_nums.write(f"${spent:,.0f} / ${limit:,.0f}")
         if over:

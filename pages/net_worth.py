@@ -53,6 +53,8 @@ def _prep_ledger(raw: pd.DataFrame) -> pd.DataFrame:
     return df.sort_values("Date")
 
 
+st.title("📊 Net Worth")
+
 # ── Sidebar ────────────────────────────────────────────────────────────────
 with st.sidebar:
     if st.button("🔄 Refresh Data", use_container_width=True):
@@ -131,6 +133,7 @@ k1, k2, k3 = st.columns(3)
 k1.metric("🏦 Account Balances", f"${current_ledger:,.2f}")
 k2.metric("💼 Portfolio Value", f"${current_portfolio:,.2f}")
 k3.metric("📊 Net Worth", f"${current_net_worth:,.2f}")
+st.caption(f"Data through {all_end.strftime('%B %d, %Y')}")
 
 st.divider()
 

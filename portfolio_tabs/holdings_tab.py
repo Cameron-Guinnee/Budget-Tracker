@@ -28,6 +28,7 @@ def holdings_tab(df: pd.DataFrame) -> None:
         ).where(open_positions["Cost Basis"] > 0)
 
         total_value = open_positions["Current Value"].sum()
+        open_positions["Weight %"] = (open_positions["Current Value"] / total_value * 100).where(total_value > 0)
         total_cost = open_positions["Cost Basis"].sum()
         total_unrealized = open_positions["Unrealized P&L"].sum()
         total_realized = holdings["Realized Gains"].sum()
@@ -44,7 +45,7 @@ def holdings_tab(df: pd.DataFrame) -> None:
         st.divider()
 
         display = open_positions[[
-            "Symbol", "Asset Type", "Shares", "Avg Cost",
+            "Symbol", "Asset Type", "Weight %", "Shares", "Avg Cost",
             "Current Price", "Current Value", "Cost Basis",
             "Unrealized P&L", "Unrealized P&L %",
         ]].copy()
@@ -57,6 +58,7 @@ def holdings_tab(df: pd.DataFrame) -> None:
         styled = (
             display.style
             .format({
+                "Weight %": "{:.1f}%",
                 "Avg Cost": "${:,.2f}",
                 "Current Price": "${:,.4f}",
                 "Current Value": "${:,.2f}",

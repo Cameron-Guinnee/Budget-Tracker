@@ -3,6 +3,10 @@ import streamlit as st
 from styling import category_color_map, payment_method_color_map, payment_method_label_prefix, get_owner_color_map
 
 def df_tab(df: pd.DataFrame) -> None:
+    search = st.text_input("🔍 Search memo", placeholder="Filter by memo…", label_visibility="collapsed")
+    if search:
+        df = df[df["Memo"].str.contains(search, case=False, na=False)]
+
     df = df.reset_index(drop=True)
     df["Price"] = df["Price"].astype(float)
 

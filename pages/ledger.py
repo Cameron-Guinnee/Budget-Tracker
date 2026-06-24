@@ -4,6 +4,8 @@ from streamlit_gsheets import GSheetsConnection
 import tabs
 from utils import get_google_sheet_titles_and_url, get_worksheet, get_worksheet_dataframe
 
+st.title("📒 Ledger")
+
 conn: GSheetsConnection = st.connection("gsheets", type=GSheetsConnection)
 
 DATA_TTL_SECONDS = 10 * 60
@@ -55,6 +57,8 @@ with st.sidebar:
         raw_repr = df.head(5).map(lambda x: repr(x))
         st.dataframe(raw_repr.astype(str), hide_index=True)
 
+NON_EXPENSE_CATS = {"Income", "Transfer In", "Transfer Out", "Savings"}
+
 # ── Filtering ──────────────────────────────────────────────────────────────
 filtered_df = df
 if selected_year and selected_year != "All":
@@ -62,18 +66,48 @@ if selected_year and selected_year != "All":
 if selected_owner != "All":
     filtered_df = filtered_df[filtered_df['Owner'] == selected_owner]
 
-# ── KPI row ────────────────────────────────────────────────────────────────
-c_grouped = filtered_df.groupby("Category", as_index=False)["Price"].sum()
-income_total = c_grouped.loc[c_grouped["Category"] == "Income", "Price"].sum()
-expenses_total = c_grouped.loc[c_grouped["Category"] != "Income", "Price"].sum()
-net_savings = income_total - expenses_total
-savings_pct = (net_savings / income_total * 100) if income_total else 0
+# ── KPI helpers ────────────────────────────────────────────────────────────
+def _kpis(frame):
+    g = frame.groupby("Category", as_index=False)["Price"].sum()
+    inc = g.loc[g["Category"] == "Income", "Price"].sum()
+    exp = g.loc[~g["Category"].isin(NON_EXPENSE_CATS), "Price"].sum()
+    sav = inc - exp
+    rate = (sav / inc * 100) if inc else 0.0
+    return inc, exp, sav, rate
 
+income_total, expenses_total, net_savings, savings_pct = _kpis(filtered_df)
+
+# Year-over-year deltas (only when a specific year is selected)
+prev_income = prev_expenses = prev_savings = prev_rate = None
+if selected_year and selected_year != "All":
+    prev_year = str(int(selected_year) - 1)
+    if prev_year in year_options:
+        prev_df = df[df['Date'].dt.year == int(prev_year)]
+        if selected_owner != "All":
+            prev_df = prev_df[prev_df['Owner'] == selected_owner]
+        if not prev_df.empty:
+            prev_income, prev_expenses, prev_savings, prev_rate = _kpis(prev_df)
+
+def _delta(cur, prev):
+    if prev is None:
+        return None
+    diff = cur - prev
+    sign = "+" if diff >= 0 else ""
+    return f"{sign}${diff:,.0f} vs {prev_year}"
+
+def _delta_pct(cur, prev):
+    if prev is None:
+        return None
+    diff = cur - prev
+    sign = "+" if diff >= 0 else ""
+    return f"{sign}{diff:.1f}pp vs {prev_year}"
+
+# ── KPI row ────────────────────────────────────────────────────────────────
 kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-kpi1.metric("💰 Income", f"${income_total:,.0f}")
-kpi2.metric("💸 Expenses", f"${expenses_total:,.0f}")
-kpi3.metric("🏦 Net Savings", f"${net_savings:,.0f}")
-kpi4.metric("📊 Savings Rate", f"{savings_pct:.1f}%")
+kpi1.metric("💰 Income", f"${income_total:,.0f}", delta=_delta(income_total, prev_income))
+kpi2.metric("💸 Expenses", f"${expenses_total:,.0f}", delta=_delta(expenses_total, prev_expenses), delta_color="inverse")
+kpi3.metric("🏦 Net Savings", f"${net_savings:,.0f}", delta=_delta(net_savings, prev_savings))
+kpi4.metric("📊 Savings Rate", f"{savings_pct:.1f}%", delta=_delta_pct(savings_pct, prev_rate))
 
 st.divider()
 

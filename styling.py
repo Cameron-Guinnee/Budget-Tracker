@@ -38,8 +38,15 @@ category_color_map = {
     "Petrol": "#b8860b",
     "Transfer In": "#a8cbff",
     "Transfer Out": "#ff492f",
-    "Other": "#ffffff",
+    "Other": "#8a8a8a",
 }
+
+
+def fmt_currency(value: float, decimals: int = 0) -> str:
+    """Format a number as a USD currency string."""
+    fmt = f"{{:,.{decimals}f}}"
+    return f"${fmt.format(value)}"
+
 
 payment_method_color_map = {
     "Credit": "#bfe1f6",

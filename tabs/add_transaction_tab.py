@@ -85,6 +85,7 @@ def transaction_tab(df: pd.DataFrame | None = None) -> None:
                         values = [date.strftime('%m/%d/%Y'), memo, category, owner, account, price, payment_method, shared]
                         res = worksheet_client.append_row(values, value_input_option = 'USER_ENTERED')
                         if res:
+                            st.cache_data.clear()
                             st.toast(':green[Transaction added successfully!]', icon='🎉')
                         else:
                             st.toast(':red[Something went wrong]', icon='😢')
